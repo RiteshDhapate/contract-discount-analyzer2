@@ -82,7 +82,7 @@ const handleCalulateUserDiscount =(e)=>{
       </div>
       <div className="mt-4 flex items-center">
         <Label htmlFor={`spending-${title}`} className="mr-2 text-white">
-          Your spending:
+        Discount Distribution Annule List Price:
         </Label>
         <Input
           id={`spending-${title}`}
