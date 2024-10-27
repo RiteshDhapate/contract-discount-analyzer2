@@ -8,16 +8,28 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const WhiskerPlot = ({ title, data, spending, setSpending, color }) => {
+const WhiskerPlot = ({ title, data, spending, setSpending, color,userDiscountAmt,setUserDiscountAmt }) => {
   const min = data.Min_Discount;
   const max = data.Max_Discount;
   const range = max - min;
   const average = data.Average_Discount;
-
+  const [userDiscount,setUserDiscount]=useState(0);
   console.log(data.Min_Discount, data.Max_Discount, data.Average_Discount);
 
   const minSavings = Math.max(spending * (data.Max_Discount / 100) * -1);
   const maxSavings = Math.max(spending * (data.Min_Discount / 100) * -1);
+  function calculateDiscount(price, discountPercentage) {
+    const discountAmount = (price * discountPercentage) / 100;
+    const finalPrice = price - discountAmount;
+    
+  return discountAmount;
+}
+const handleCalulateUserDiscount =(e)=>{
+  const amt=calculateDiscount(spending,userDiscount);
+  const res=amt > maxSavings ?0 : amt ;
+  setUserDiscountAmt(res);
+  setUserDiscount(Number(e.target.value))
+}
 
   return (
     <div className="mb-8">
@@ -37,6 +49,10 @@ const WhiskerPlot = ({ title, data, spending, setSpending, color }) => {
           className="absolute top-0 bottom-0 w-1 bg-red-500"
           style={{ left: `${((average - min) / range) * 100}%` }}
         ></div>
+         <div
+          className="absolute top-0 bottom-0 w-1 bg-green-500"
+          style={{ left: `${(((userDiscount>0 ? -userDiscount : userDiscount) - min) / range) * 100}%` }}
+        ></div>
         {data.Discount_Values.map((value, index) => (
           <div
             key={index}
@@ -50,6 +66,12 @@ const WhiskerPlot = ({ title, data, spending, setSpending, color }) => {
         </div>
         <div className="absolute -bottom-6 right-0 text-xs text-gray-400">
           {max.toFixed(2)}%
+        </div>
+        <div
+          className="absolute -top-6 text-xs text-gray-400"
+          style={{ left: `${(((userDiscount>0 ? -userDiscount : userDiscount) - min) / range) * 100}%` }}
+        >
+          {userDiscount.toFixed(2)}%
         </div>
         <div
           className="absolute -top-6 text-xs text-gray-400"
@@ -69,12 +91,25 @@ const WhiskerPlot = ({ title, data, spending, setSpending, color }) => {
           onChange={(e) => setSpending(Number(e.target.value))}
           className="w-24 mr-4 bg-gray-700 text-white border-gray-600 focus:border-blue-500"
         />
+
+      <Label htmlFor={`spending-${title}`} className="mr-2 text-white">
+          Your Discount (%):
+        </Label>
+        <Input
+          id={`spending-${title}`}
+          type="number"
+          value={userDiscount}
+          onChange={(e) => {
+            handleCalulateUserDiscount(e)
+          }}
+          className="w-24 mr-4 bg-gray-700 text-white border-gray-600 focus:border-blue-500"
+        />
         <span className="text-white">
-          Minimum savings: ${minSavings.toFixed(2)}
+        Addition Possible Savings: ${userDiscountAmt.toFixed(2)}
         </span>
-        <span className="text-white ml-4">
+        {/* <span className="text-white ml-4">
           Maximum savings: ${maxSavings.toFixed(2)}
-        </span>
+        </span> */}
       </div>
     </div>
   );
@@ -90,6 +125,9 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
   const [spendings, setSpendings] = useState(
     carrierData.map(() => (annualSpend * getRandomPercentage()) / 100)
   );
+  const [userDiscountAmt, setUserDiscountAmt]=useState(
+    carrierData.map(() => 0)
+  )
 
   if (data.error) {
     return (
@@ -116,7 +154,7 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
 
   const totalSavings = spendings.reduce((total, spending, index) => {
     const maxSavings = spending * (data[index]["Min Discount"] / 100) * -1;
-    return total + maxSavings;
+    return total + maxSavings + userDiscountAmt[index];
   }, 0);
 
   return (
@@ -153,6 +191,12 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
               Discount_Values: plot["Discount Values"],
             }}
             spending={spendings[index].toFixed(0)}
+            userDiscountAmt={userDiscountAmt[index]}
+            setUserDiscountAmt={(value) => {
+              const newSpendings = [...userDiscountAmt];
+              newSpendings[index] = value;
+              setUserDiscountAmt(newSpendings);
+            }}
             setSpending={(value) => {
               const newSpendings = [...spendings];
               newSpendings[index] = value;
@@ -162,7 +206,7 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
           />
         ))}
         <div className="mt-8 text-xl font-bold">
-          Total potential savings: ${totalSavings.toFixed(2)}
+        Additional potential savings: ${totalSavings.toFixed(2)}
         </div>
         <div className="mt-4">
           <h4 className="text-lg font-semibold mb-2">Savings Breakdown:</h4>

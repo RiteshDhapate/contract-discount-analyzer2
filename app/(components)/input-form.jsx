@@ -77,7 +77,7 @@ export function InputForm({ onSubmit }) {
   };
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <Label htmlFor="company-name" className="text-lg font-semibold">
           Company Name
         </Label>
@@ -91,9 +91,9 @@ export function InputForm({ onSubmit }) {
             required
           />
         </div>
-      </div>
+      </div> */}
 
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <Label htmlFor="email" className="text-lg font-semibold">
           Email Address
         </Label>
@@ -108,7 +108,7 @@ export function InputForm({ onSubmit }) {
             required
           />
         </div>
-      </div>
+      </div> */}
 
       <div className="space-y-2">
         <Label htmlFor="company-type" className="text-lg font-semibold">
@@ -145,7 +145,7 @@ export function InputForm({ onSubmit }) {
         </div>
       </div>
 
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <Label htmlFor="origin-locations" className="text-lg font-semibold">
           Origin Locations
         </Label>
@@ -159,9 +159,9 @@ export function InputForm({ onSubmit }) {
             required
           />
         </div>
-      </div>
+      </div> */}
 
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <Label
           htmlFor="destination-locations"
           className="text-lg font-semibold"
@@ -178,9 +178,9 @@ export function InputForm({ onSubmit }) {
             required
           />
         </div>
-      </div>
+      </div> */}
 
-      <div className="grid grid-cols-2 gap-4">
+      {/* <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="min-weight" className="text-lg font-semibold">
             Minimum Package Weight (lbs)
@@ -213,7 +213,7 @@ export function InputForm({ onSubmit }) {
             />
           </div>
         </div>
-      </div>
+      </div> */}
 
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Analyzing..." : "Analyze Discounts"}
