@@ -8,6 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+const calDiscount=(amount,initialDiscount,userDiscount) => {
+  const initialDiscountAbs = Math.abs(initialDiscount);
+  const userDiscountAbs = Math.abs(userDiscount);
+  const res=amount*(initialDiscountAbs-userDiscountAbs)/100;
+  console.log("final 2 -->",amount,initialDiscount,userDiscount,initialDiscountAbs,userDiscountAbs,res)
+  return res;
+}
+
 const WhiskerPlot = ({ title, data, spending, setSpending, color,userDiscountAmt,setUserDiscountAmt }) => {
   const min = data.Min_Discount;
   const max = data.Max_Discount;
@@ -18,16 +26,26 @@ const WhiskerPlot = ({ title, data, spending, setSpending, color,userDiscountAmt
 
   const minSavings = Math.max(spending * (data.Max_Discount / 100) * -1);
   const maxSavings = Math.max(spending * (data.Min_Discount / 100) * -1);
-  function calculateDiscount(price, discountPercentage) {
-    const discountAmount = (price * discountPercentage) / 100;
-    const finalPrice = price - discountAmount;
-    
-  return discountAmount;
+  function calculateDiscountedAmount(amount, initialDiscount, moreDiscount) {
+    // Convert discounts to positive for calculation
+    const initialDiscountAbs = Math.abs(initialDiscount);
+    const moreDiscountAbs = Math.abs(moreDiscount);
+
+    // Calculate effective discount
+    const effectiveDiscount = initialDiscountAbs - moreDiscountAbs;
+
+    // Calculate the discounted amount
+    const discountAmount = amount * (effectiveDiscount / 100);
+    const finalAmount = amount - discountAmount;
+
+    return Math.abs(discountAmount);
 }
 const handleCalulateUserDiscount =(e)=>{
-  const amt=calculateDiscount(spending,userDiscount);
-  const res=amt > maxSavings ?0 : amt ;
-  setUserDiscountAmt(res);
+  console.log("my data " ,spending,min,Number(e.target.value));
+  const amt=calDiscount(spending,min,Number(e.target.value));
+  console.log("final -->",spending,min,Number(e.target.value),amt)
+  // const res=amt > maxSavings ?0 : amt ;
+  setUserDiscountAmt(amt);
   setUserDiscount(Number(e.target.value))
 }
 
@@ -51,7 +69,7 @@ const handleCalulateUserDiscount =(e)=>{
         ></div>
          <div
           className="absolute top-0 bottom-0 w-1 bg-green-500"
-          style={{ left: `${(((userDiscount>0 ? -userDiscount : userDiscount) - min) / range) * 100}%` }}
+          style={{ left: `${((userDiscount - min) / range) * 100}%` }}
         ></div>
         {data.Discount_Values.map((value, index) => (
           <div
@@ -69,9 +87,9 @@ const handleCalulateUserDiscount =(e)=>{
         </div>
         <div
           className="absolute -top-6 text-xs text-gray-400"
-          style={{ left: `${(((userDiscount>0 ? -userDiscount : userDiscount) - min) / range) * 100}%` }}
+          style={{ left: `${((userDiscount - min) / range) * 100}%` }}
         >
-          {userDiscount.toFixed(2)}%
+          -{userDiscount.toFixed(2)}%
         </div>
         <div
           className="absolute -top-6 text-xs text-gray-400"
@@ -82,7 +100,7 @@ const handleCalulateUserDiscount =(e)=>{
       </div>
       <div className="mt-4 flex items-center">
         <Label htmlFor={`spending-${title}`} className="mr-2 text-white">
-        Discount Distribution Annule List Price:
+        Estimated Spend:
         </Label>
         <Input
           id={`spending-${title}`}
@@ -105,7 +123,7 @@ const handleCalulateUserDiscount =(e)=>{
           className="w-24 mr-4 bg-gray-700 text-white border-gray-600 focus:border-blue-500"
         />
         <span className="text-white">
-        Addition Possible Savings: ${userDiscountAmt.toFixed(2)}
+        Additional Possible Savings: ${userDiscountAmt.toFixed(2)}
         </span>
         {/* <span className="text-white ml-4">
           Maximum savings: ${maxSavings.toFixed(2)}
@@ -116,6 +134,20 @@ const handleCalulateUserDiscount =(e)=>{
 };
 
 export function DiscountVisualization({ carrier, data, annualSpend }) {
+  function calculateDiscountedAmount(amount, initialDiscount, moreDiscount) {
+    // Convert discounts to positive for calculation
+    const initialDiscountAbs = Math.abs(initialDiscount);
+    const moreDiscountAbs = Math.abs(moreDiscount);
+
+    // Calculate effective discount
+    const effectiveDiscount = initialDiscountAbs - moreDiscountAbs;
+
+    // Calculate the discounted amount
+    const discountAmount = amount * (effectiveDiscount / 100);
+    const finalAmount = amount - discountAmount;
+
+    return Math.abs(discountAmount);
+}
   const getRandomPercentage = () => {
     const percent = Math.random() * 5 + 5;
     return percent.toFixed(0);
@@ -126,7 +158,7 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
     carrierData.map(() => (annualSpend * getRandomPercentage()) / 100)
   );
   const [userDiscountAmt, setUserDiscountAmt]=useState(
-    carrierData.map(() => 0)
+    carrierData.map((ite,index) => 0)
   )
 
   if (data.error) {
@@ -153,9 +185,17 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
   ];
 
   const totalSavings = spendings.reduce((total, spending, index) => {
-    const maxSavings = spending * (data[index]["Min Discount"] / 100) * -1;
-    return total + maxSavings + userDiscountAmt[index];
+    return total + userDiscountAmt[index];
   }, 0);
+  useEffect(() =>{
+    const discountAmount =data.map((data,index) =>{
+      const dis= data["Min Discount"]
+      const res=calDiscount(spendings[index],dis,0);
+      return res
+    })
+    console.log("final 3",discountAmount);
+    setUserDiscountAmt(discountAmount);
+  },[])
 
   return (
     <Card className="w-full mx-auto bg-gray-900 text-white">
@@ -195,12 +235,12 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
             setUserDiscountAmt={(value) => {
               const newSpendings = [...userDiscountAmt];
               newSpendings[index] = value;
-              setUserDiscountAmt(newSpendings);
+              setUserDiscountAmt(()=>newSpendings);
             }}
             setSpending={(value) => {
               const newSpendings = [...spendings];
               newSpendings[index] = value;
-              setSpendings(newSpendings);
+              setSpendings(()=>newSpendings);
             }}
             color={colors[index % colors.length]}
           />
@@ -211,18 +251,15 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
         <div className="mt-4">
           <h4 className="text-lg font-semibold mb-2">Savings Breakdown:</h4>
           {data.map((plot, index) => {
-            const minSavings = Math.abs(
-              Math.max(
-                spendings[index] -
-                  (1 - plot["Max Discount"] / 100) * spendings[index]
-              )
+            const userDiscountAmtData = Math.abs(
+                userDiscountAmt[index] 
             );
-            const maxSavings = Math.abs(
-              Math.max(
-                spendings[index] -
-                  (1 - plot["Min Discount"] / 100) * spendings[index]
-              )
-            );
+            // const maxSavings = Math.abs(
+            //   Math.max(
+            //     spendings[index] -
+            //       (1 - plot["Min Discount"] / 100) * spendings[index]
+            //   )
+            // );
             return (
               <div
                 key={index}
@@ -230,7 +267,7 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
               >
                 <span>{plot["Service Level"]}:</span>
                 <span>
-                  ${minSavings.toFixed(2)} - ${maxSavings.toFixed(2)}
+                  ${userDiscountAmtData.toFixed(2)}
                 </span>
               </div>
             );
