@@ -89,7 +89,7 @@ const handleCalulateUserDiscount =(e)=>{
           className="absolute -top-6 text-xs text-gray-400"
           style={{ left: `${((userDiscount - min) / range) * 100}%` }}
         >
-          -{userDiscount.toFixed(2)}%
+          {userDiscount.toFixed(2)}%
         </div>
         <div
           className="absolute -top-6 text-xs text-gray-400"
@@ -160,6 +160,15 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
   const [userDiscountAmt, setUserDiscountAmt]=useState(
     carrierData.map((ite,index) => 0)
   )
+  useEffect(() =>{
+    const discountAmount =data.map((data,index) =>{
+      const dis= data["Min Discount"]
+      const res=calDiscount(spendings[index],dis,0);
+      return res
+    })
+    console.log("final 3",discountAmount);
+    setUserDiscountAmt(discountAmount);
+  },[])
 
   if (data.error) {
     return (
@@ -187,15 +196,7 @@ export function DiscountVisualization({ carrier, data, annualSpend }) {
   const totalSavings = spendings.reduce((total, spending, index) => {
     return total + userDiscountAmt[index];
   }, 0);
-  useEffect(() =>{
-    const discountAmount =data.map((data,index) =>{
-      const dis= data["Min Discount"]
-      const res=calDiscount(spendings[index],dis,0);
-      return res
-    })
-    console.log("final 3",discountAmount);
-    setUserDiscountAmt(discountAmount);
-  },[])
+
 
   return (
     <Card className="w-full mx-auto bg-gray-900 text-white">
